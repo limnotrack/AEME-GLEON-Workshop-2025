@@ -1,9 +1,3 @@
----
-editor_options: 
-  markdown: 
-    wrap: 80
----
-
 # Building and Running an Aquatic Ecosystem Model Ensemble in R
 
 --------------------------------------------------------------------------------
