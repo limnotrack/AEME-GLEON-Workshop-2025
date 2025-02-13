@@ -53,9 +53,8 @@ remotes::install_github("limnotrack/aemetools")
 
 ## Workshop Outline
 
-|  |  |
-|----|----|
 | **Time** | **Activity** |
+|----|----|
 | 08:30 | Welcome & setup |
 | 08:45 | Icebreaker activity |
 | 09:00 | Introduction to Aquatic Ecosystem Modelling |
