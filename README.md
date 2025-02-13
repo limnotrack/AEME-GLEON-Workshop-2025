@@ -7,7 +7,7 @@
 Woelmer, Maggie Armstrong & Deniz Özkundakci\
 :computer: [Material](https://github.com/limnotrack/AEME-GLEON-Workshop-2025)
 :open_book:
-[Presentation](https://docs.google.com/presentation/d/1aeh3kiiSywbeBQoLE7aRsByczgMwE1QYlvnCZiadN2M/edit?usp=sharing)
+[Presentation](https://docs.google.com/presentation/d/e/2PACX-1vSQR3RyD4lzG2CUp5-2PGvvX_A5UPBLg39Atl4c0u02du8nNxqNrW74GizQt9BDLvSrQk2-rHAIaCM8/pub?start=false&loop=false&delayms=3000)
 
 --------------------------------------------------------------------------------
 
@@ -69,7 +69,6 @@ remotes::install_github("limnotrack/aemetools")
 
 -   [AEME](https://limnotrack.github.io/AEME/)
 -   [aemetools](https://github.com/limnotrack/aemetools)
+-   [bathytools](https://github.com/limnotrack/bathytools)
 -   [LERNZmp](https://limnotrack.shinyapps.io/LERNZmp/)
 -   [LERNZ](https://www.waikato.ac.nz/research/institutes-centres-entities/entities/lake-ecosystem-research-new-zealand-lernz/)
-
-
