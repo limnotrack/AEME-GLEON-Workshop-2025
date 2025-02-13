@@ -4,7 +4,7 @@
 
 :spiral_calendar: February 16, 2025\
 :alarm_clock: 08:30 - 12:00 WIB :busts_in_silhouette: Tadhg Moore, Whitney
-Woelmer, Maggie Armstrong & Deniz Özkundakci\
+Woelmer & Deniz Özkundakci\
 :computer: [Material](https://github.com/limnotrack/AEME-GLEON-Workshop-2025)
 :open_book:
 [Presentation](https://docs.google.com/presentation/d/e/2PACX-1vSQR3RyD4lzG2CUp5-2PGvvX_A5UPBLg39Atl4c0u02du8nNxqNrW74GizQt9BDLvSrQk2-rHAIaCM8/pub?start=false&loop=false&delayms=3000)
