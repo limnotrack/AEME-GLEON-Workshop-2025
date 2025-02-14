@@ -161,15 +161,21 @@ plot_output(aeme = aeme, model = model, var_sim = "HYD_temp")
 #' This plot shows the simulated water temperature for the lake. The x-axis is
 #' time and the y-axis is depth. The colour represents the temperature in
 #' degrees Celsius.
+#' Plot the lake level
+plot_output(aeme = aeme, model = model, var_sim = "LKE_lvlwtr", facet = FALSE)
 
 # Compare modelled output to observations ----
 #' Load the observed data
 lake_obs <- read.csv("data/LID45819_wainamu/observations_lake.csv")
 lake_obs$Date <- as.Date(lake_obs$Date) # Convert the Date column to a Date object
+
+#' Summary of the observed data
 summary(lake_obs)
+
+#' Summary of the data by variable
 lake_obs |> 
   group_by(var_aeme) |> 
-  dplyr::summarise(
+  summarise(
     min_date = min(Date),
     max_date = max(Date),
     min = min(value),
@@ -187,17 +193,50 @@ lake_obs |>
 
 aeme <- add_obs(aeme = aeme, lake = lake_obs)
 plot_obs(aeme = aeme, var_sim = "HYD_temp")
-model_performance <- assess_model(aeme = aeme, model = model,
+pre <- assess_model(aeme = aeme, model = model,
                                   var_sim = "HYD_temp")
+pre # Print the model performance to the console
 
+#' Plot the residuals
 plot_resid(aeme = aeme, model = model, var_sim = "HYD_temp")
+
+## Inflows ----
+#' Load the inflow data
+inflow_files <- list.files(lake_dir, pattern = "inflows", full.names = TRUE)
+inflow_data <- lapply(inflow_files, function(f){
+  df <- read.csv(f)
+  df$Date <- as.Date(df$Date)
+  df
+})
+
+inflow_names <- basename(inflow_files) |> 
+  gsub("inflows_", "", x = _) |> 
+  gsub(".csv", "", x = _)
+inflow_names
+
+names(inflow_data) <- inflow_names
+aeme <- add_inflows(aeme = aeme, data = inflow_data)
+aeme
+
+## Parameters ----
+#' Add parameters to the AEME object which have been calibrated for water level
+param_file <- list.files(lake_dir, pattern = "parameters", full.names = TRUE)
+param_data <- read.csv(param_file)
+param_data
+
+aeme <- add_pars(aeme = aeme, pars = param_data)
+aeme
+
+# Re-build the model ensemble with the inflow data & parameters
+aeme <- build_aeme(aeme = aeme, model = model, model_controls = model_controls,
+                   path = path, wb_method = 2)
+aeme <- run_aeme(aeme = aeme, model = model, path = path, parallel = TRUE)
+
+post <- assess_model(aeme = aeme, model = model, var_sim = "HYD_temp")
 
 #' Plot the lake level
 plot_output(aeme = aeme, model = model, var_sim = "LKE_lvlwtr", facet = FALSE,
             remove_spin_up = FALSE)
 
-aeme <- build_aeme(aeme = aeme, model = model, model_controls = model_controls,
-                   path = path, wb_method = 2)
-aeme <- run_aeme(aeme = aeme, model = model, path = path, parallel = TRUE)
-plot_output(aeme = aeme, model = model, var_sim = "LKE_lvlwtr", facet = FALSE,
-            remove_spin_up = FALSE)
+plot_output(aeme = aeme, model = model, var_sim = "HYD_temp")
+
