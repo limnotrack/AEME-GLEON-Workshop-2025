@@ -1,3 +1,4 @@
+# Load the libraries ----
 library(AEME)
 library(dplyr)
 library(ggplot2)
@@ -53,9 +54,9 @@ time <- list(
   stop = as.POSIXct(time_data$stop, tz = "UTC"),
   time_step = time_data$time_step,
   spin_up = list(
-    dy_cd = time_data$spin_up.dy_cd,
-    glm_aed = time_data$spin_up.glm_aed,
-    gotm_wet = time_data$spin_up.gotm_wet
+    dy_cd = 3 * 365, # 3 years spin up
+    glm_aed = 3 * 365, # 3 years spin up
+    gotm_wet = 3 * 365 # 3 years spin up
   )
 )
 time
@@ -240,3 +241,31 @@ plot_output(aeme = aeme, model = model, var_sim = "LKE_lvlwtr", facet = FALSE,
 
 plot_output(aeme = aeme, model = model, var_sim = "HYD_temp")
 
+
+# Biogeochemical Model ----
+#' Oh wow, lake physics... That's so 2010. Let's get with the times and add a
+#' biogeochemical model to our ensemble. We will use GLM (General Lake Model) &
+#' GOTM (General Ocean Turbulence Model)  with the biogeochemical model switched
+#' on.
+
+## Switch on the biogeochemical model ----
+#' Get model controls with biogeochmical variables switched on as default
+model_controls <- get_model_controls(use_bgc = TRUE)
+View(model_controls)
+
+#' Build the model ensemble with the biogeochemical model switched on
+aeme <- build_aeme(aeme = aeme, model = model, model_controls = model_controls,
+                   path = path, use_bgc = TRUE)
+#' Run the ensemble in parallel - this may take some time [~1]
+aeme <- run_aeme(aeme = aeme, model = model, path = path)
+
+plot_output(aeme = aeme, model = model, var_sim = "HYD_temp") # Temperature
+plot_output(aeme = aeme, model = model, var_sim = "CHM_oxy") # Oxygen
+plot_output(aeme = aeme, model = model, var_sim = "PHY_tchla") # Total chla
+plot_output(aeme = aeme, model = model, var_sim = "PHS_tp") # Total P
+plot_output(aeme = aeme, model = model, var_sim = "NIT_tn") # Total N
+
+## Assess the model performance ----
+vars <- c("HYD_temp", "CHM_oxy", "PHY_tchla", "PHS_tp", "NIT_tn")
+assessment <- assess_model(aeme = aeme, model = model, var_sim = vars)
+assessment
