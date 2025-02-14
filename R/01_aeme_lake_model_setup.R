@@ -157,6 +157,17 @@ aeme
 #' GOTM-WET. This means that the models have run and their output has been 
 #' aded to the AEME object.
 
+## Variable names ----
+#' The variable names in the model output can be found in the `view_aeme_vars()`
+#' function. This function will show the variable short name, long name and 
+#' units for each variable in the model output.
+view_aeme_vars()
+
+#' View according to groups
+?view_aeme_vars()
+view_aeme_vars("HYD")
+view_aeme_vars("LKE")
+
 #' View the output ----
 plot_output(aeme = aeme, model = model, var_sim = "HYD_temp")
 #' This plot shows the simulated water temperature for the lake. The x-axis is
@@ -260,7 +271,9 @@ aeme <- build_aeme(aeme = aeme, model = model, model_controls = model_controls,
 aeme <- run_aeme(aeme = aeme, model = model, path = path)
 
 plot_output(aeme = aeme, model = model, var_sim = "HYD_temp") # Temperature
+view_aeme_vars("CHM")
 plot_output(aeme = aeme, model = model, var_sim = "CHM_oxy") # Oxygen
+view_aeme_vars("PHY")
 plot_output(aeme = aeme, model = model, var_sim = "PHY_tchla") # Total chla
 plot_output(aeme = aeme, model = model, var_sim = "PHS_tp") # Total P
 plot_output(aeme = aeme, model = model, var_sim = "NIT_tn") # Total N
