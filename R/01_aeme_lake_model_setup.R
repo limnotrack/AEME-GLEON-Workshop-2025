@@ -1,0 +1,203 @@
+library(AEME)
+library(dplyr)
+library(ggplot2)
+library(sf)
+library(tmap)
+tmap_mode("view")
+
+#' Define the location of Lake Wainamu data
+lake_dir <- "data/LID45819_wainamu/"
+
+#' Let's list the files in the directory 
+files <- list.files(lake_dir, full.names = TRUE)
+files
+#> [1] "data/LID45819_wainamu/inflows_factors.csv"    "data/LID45819_wainamu/inflows_lumped.csv"
+#> ...
+#' We can see that all the files are .csv files. These files can be read into R
+#' using the `read.csv()` function or you can view the files in a text editor 
+#' or spreadsheet program like Excel.
+
+# Constructing the AEME object ----
+## Lake ----
+# Load the lake data
+lake_data <- read.csv("data/LID45819_wainamu/lake.csv")
+lake_data
+
+#' For inputting into the AEME model we need to convert the data into a list.
+lake <- as.list(lake_data)
+lake
+
+#' Let's view where Lake Wainamu is located on a map.
+#' First convert to a spatial feature with the sf package
+coords <- data.frame(lat = lake$latitude, lon = lake$longitude) |> 
+  st_as_sf(coords = c("lon", "lat"), crs = 4326)
+
+#' Them plot the location on a map with tmap
+tm_shape(coords) +
+  tm_dots(fill = "red", size = 2)
+
+
+## Time ----
+# Load the time data
+time_data <- read.csv("data/LID45819_wainamu/time.csv")
+time_data
+
+#' Here we have a start and stop time for the model. We also have a time step
+#' which is the time interval between each model time step. We also have a 
+#' spin-up time which is the time before the start time that the model will
+#' run for. This is useful for allowing the model to reach a steady state
+#' before the start time.
+
+time <- list(
+  start = as.POSIXct(time_data$start, tz = "UTC"),
+  stop = as.POSIXct(time_data$stop, tz = "UTC"),
+  time_step = time_data$time_step,
+  spin_up = list(
+    dy_cd = time_data$spin_up.dy_cd,
+    glm_aed = time_data$spin_up.glm_aed,
+    gotm_wet = time_data$spin_up.gotm_wet
+  )
+)
+time
+
+## Input ----
+#' Next we will load in our input data for the model. This includes the 
+#' hypsograph, meteorological data, initial depth, and initial profile. We will 
+#' start with the hypsograph data.
+
+hypsograph <- read.csv("data/LID45819_wainamu/input_hypsograph.csv")
+hypsograph
+
+#' Plot the hypsograph
+ggplot(hypsograph, aes(x = area, y = depth)) +
+  geom_line() +
+  geom_hline(yintercept = 0) +
+  labs(y = "Depth (m)", x = "Area (m^2)") +
+  theme_bw(16)
+
+#' Notice how the hypsograph extends above the lake surface (depth > 0), this is
+#' crucial to ensure that the model can simulate lake level fluctuations.
+
+#' Next we will load in the meteorological data.
+met <- read.csv("data/LID45819_wainamu/input_meteo.csv") 
+met$Date <- as.Date(met$Date) # Convert the Date column to a Date object
+summary(met)
+
+#' For information on the meteorological data columns see the AEME documentation
+#' here: https://limnotrack.github.io/AEME/articles/aeme-inputs.html#meteorological-data
+
+#' Load in light extinction data
+Kw <- read.csv("data/LID45819_wainamu/input_Kw.csv")
+Kw 
+
+#' Load in the initial profile data
+init_profile <- read.csv("data/LID45819_wainamu/input_init_profile.csv")
+init_profile
+
+#' Load in the initial depth data
+init_depth <- read.csv("data/LID45819_wainamu/input_init_depth.csv")
+init_depth
+
+#' Define input list
+input = list(
+  init_depth = init_depth$init_depth,
+  init_profile = init_profile,
+  hypsograph = hypsograph,
+  meteo = met,
+  use_lw = TRUE,
+  Kw = Kw$Kw
+)
+
+
+#' Construct AEME object ----
+aeme <- aeme_constructor(lake = lake, 
+                         time = time,
+                         input = input)
+aeme
+
+#' Model controls
+model_controls <- get_model_controls(use_bgc = FALSE)
+View(model_controls) # View the model controls
+
+#' Select models
+model <- get_models()
+model
+
+#' For this workshop we will only use the General Lake Model (GLM) and the 
+#' General Ocean Turbulence Model (GOTM) for the water column. 
+model <- c("glm_aed", "gotm_wet")
+
+#' Path for model directory
+#' This is the directory where the model configuration files will be saved
+#' and where the model output will be stored.
+path <- "aeme"
+dir.create(path)
+
+# Build the AEME model ensemble ----
+aeme
+aeme <- build_aeme(aeme = aeme, model = model, model_controls = model_controls,
+                   path = path, wb_method = 1)
+aeme
+#' Notice that in the 'Configuration' section it now says 'Present' under the 
+#' Physical models. This means that the models have been successfully added to
+#' the AEME object.
+
+list.files(path, recursive = TRUE, full.names = TRUE)
+#' The models have been added to the 'aeme' directory. The 'glm_aed' and 
+#' 'gotm_wet' directories contain the model configuration files.
+
+
+#' Run the ensemble ----
+aeme <- run_aeme(aeme = aeme, model = model, path = path, parallel = FALSE)
+#' The model is now running. This may take some time depending on the number of
+#' models and the length of the simulation.
+aeme
+#' Notice that in the Output section it now has a number 1 beside GLM-AED & 
+#' GOTM-WET. This means that the models have run and their output has been 
+#' aded to the AEME object.
+
+#' View the output ----
+plot_output(aeme = aeme, model = model, var_sim = "HYD_temp")
+#' This plot shows the simulated water temperature for the lake. The x-axis is
+#' time and the y-axis is depth. The colour represents the temperature in
+#' degrees Celsius.
+
+# Compare modelled output to observations ----
+#' Load the observed data
+lake_obs <- read.csv("data/LID45819_wainamu/observations_lake.csv")
+lake_obs$Date <- as.Date(lake_obs$Date) # Convert the Date column to a Date object
+summary(lake_obs)
+lake_obs |> 
+  group_by(var_aeme) |> 
+  dplyr::summarise(
+    min_date = min(Date),
+    max_date = max(Date),
+    min = min(value),
+    mean = mean(value),
+    median = median(value),
+    max = max(value),
+    n = n()
+  ) |> 
+  print(n = 30)
+
+## Adding to the aeme object ----
+#' There are two ways to add the observed data to the AEME object. The first is
+#' to add the data to the AEME object directly. The second is to add the data
+#' to the AEME object using the `add_obs()` function.
+
+aeme <- add_obs(aeme = aeme, lake = lake_obs)
+plot_obs(aeme = aeme, var_sim = "HYD_temp")
+model_performance <- assess_model(aeme = aeme, model = model,
+                                  var_sim = "HYD_temp")
+
+plot_resid(aeme = aeme, model = model, var_sim = "HYD_temp")
+
+#' Plot the lake level
+plot_output(aeme = aeme, model = model, var_sim = "LKE_lvlwtr", facet = FALSE,
+            remove_spin_up = FALSE)
+
+aeme <- build_aeme(aeme = aeme, model = model, model_controls = model_controls,
+                   path = path, wb_method = 2)
+aeme <- run_aeme(aeme = aeme, model = model, path = path, parallel = TRUE)
+plot_output(aeme = aeme, model = model, var_sim = "LKE_lvlwtr", facet = FALSE,
+            remove_spin_up = FALSE)
