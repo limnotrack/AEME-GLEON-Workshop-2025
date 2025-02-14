@@ -1,6 +1,7 @@
 # Install the required packages from CRAN
 install.packages("remotes")
 install.packages("osmdata")
+install.packages("tmap") # v4 is required
 
 # Install the required packages from GitHub
 remotes::install_github("limnotrack/AEME")
