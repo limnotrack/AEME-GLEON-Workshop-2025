@@ -60,7 +60,7 @@ remotes::install_github("limnotrack/aemetools")
 | 09:00 | Introduction to Aquatic Ecosystem Modelling |
 | 09:30 | Overview of Lake Ecosystem Research New Zealand (LERNZ) Modelling Platform |
 | 10:00 | Break - (Install R packages!) |
-| 10:30 | Recap of Platform & Introduction to R Activity |
+| 10:30 | Introduction to R Activity |
 | 10:45 | R Activity - Setting up and running of AEME in R |
 | 11:30 | Using AEME in your lake |
 
